@@ -1,0 +1,222 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>jQuery Reserved Seat Demo</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width; initial-scale=1.0">
+<meta name="keywords" content="jQuery,选座">
+<link rel="stylesheet" type="text/css" href="css/main.css" />
+<link rel="stylesheet" type="text/css" href="css/jPicker-1.1.6.min.css" />
+
+</head>
+<body>
+<div id="header"> 
+</div>
+<div id="main">
+   <h2 class="top_title"><a href="http://www.helloweba.com/view-blog-278.html">jQuery Reserved Seat Demo</a></h2>
+   <div class="demo">
+		<div id="selectArea">
+		 <div class="inputItem">
+		 <label>Row(int):</label>
+		 <input id="rowSelect"/>
+		 </div>
+		 <div class="inputItem">
+		 <label>Seats(int):</label>
+		 <input id="columnSelect"/>
+		 </div>
+		 <div class="inputItem">
+		 <label>Price:</label>
+		 <input id="seatPrice"/>
+		 </div>
+		  <div class="inputItem">
+		 <label>Color:</label>
+		 <input class="Multiple" type="text" value="" />
+		 </div>
+		 <div class="inputItem">
+		 <button id="generateMap" onClick="generateMap();">Generate Seat Map</button>
+		 <button id="saveSeatMap" onClick="saveSeatMap();">Save Seat Map</button>
+		 <button id="resolveSeatMap" onClick="resolveSeatMap();">Resolve Seat Map</button>
+		 </div>
+		</div>
+   		<div id="seat-map">	
+			<div id="stage" class="stage">Front</div>
+		</div>	
+		<div id="copy-seat-map">	
+			<div id="copy-stage" class="stage">Stage</div>
+		</div>
+  <br/>
+</div>
+<script type="text/javascript" src="js/jquery-1.11.3.js"></script>
+<script src="http://apps.bdimg.com/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+<script type="text/javascript" src="js/jquery.seat-charts.min.js"></script>
+<script type="text/javascript" src="js/jpicker-1.1.6.min.js"></script>
+<script type="text/javascript">
+var sectionNo=1;
+$(document).ready(function() {
+	var $cart = $('#selected-seats'), //座位区
+	$counter = $('#counter'), //票数
+	$total = $('#total'); //总计金额
+	
+	 $(".stage").draggable();  //drage section
+	 
+	 $('.Multiple').jPicker(); //color picker
+	 
+	//generateSeatMap(8,5);
+	
+	
+/* 	var firstMap=[  //座位图
+			'aaaaaaaaaa',
+            'aaaaaaaaaa',
+            '__________',
+            'aaaaaaaa__',
+            'aaaaaaaaaa',
+			'aaaaaaaaaa',
+			'aaaaaaaaaa',
+			'aaaaaaaaaa',
+			'aaaaaaaaaa',
+            'aa__aa__aa'
+		    ] */
+		
+});
+
+function generateMap(){
+	   var currentRow=parseInt($("#rowSelect").val());
+	   var currentCol=parseInt($("#columnSelect").val());
+	   var seatArry=generateSeatMap(currentRow,currentCol);
+	   
+	   var seatPrice=$("#seatPrice").val();
+	   var seatColor=$(".Color").attr("style");
+
+	   var sectionId="section_"+sectionNo;
+	   var sectionName="Section"+sectionNo;
+	   var deleteButtonId="deleteButton_"+sectionNo;
+	   var createHtml="<div id='"+sectionId+"' class='sectionBlock'><a id='"+deleteButtonId+"' class='deleteButton' onclick='deleteCurrentSection("+sectionId+")'></a><span class='sectionLabel'>"+sectionId+"</span></div>";
+	   sectionNo++;
+	   $("#seat-map").append(createHtml);
+
+	 var sc=$("#"+sectionId).seatCharts({
+		map: seatArry,
+		naming : {
+			top : false,
+			getLabel : function (character, row, column) {
+				return column;
+			}
+		},
+		seats: {
+				v: {
+					classes: 'seatClass',
+					price  : seatPrice
+					}
+			}
+			
+	   });
+	   //Set Seat Color
+	   var testObj=$("#"+sectionId).find(".seatCharts-seat.available");
+	   $.each(testObj,function(key,val){
+			var $this=this;
+			//$this.style.background-color=seatColor+"!important";
+	   });
+	   	   debugger;
+	   
+	   
+	   //Make section draggable
+	   $(".sectionBlock").draggable();
+	   //Empty user input
+	   $("#rowSelect").val("");
+	   $("#columnSelect").val("")
+	}
+function generateSeatMap(row,column){
+		var result=[];
+		for (var i=0;i<row;i++)
+		{
+			var rowString="";
+			for (var j=0;j<column;j++)
+			{
+			   rowString+='a';
+			}
+			result.push("'"+rowString+"'");
+		}
+		return result;	
+	}
+function deleteCurrentSection(sectionId){
+		var $this=sectionId;
+		$this.remove();
+}
+//Set Seat Map
+function saveSeatMap(){
+		var resultArry=[];
+		var stageStyle=$("#stage").attr("style");
+		var resultSeatMap={
+		    "Name":"",
+			"StagePosition":"",
+			"Section":[]
+		}
+		resultSeatMap.Name="Test Site Map";
+		resultSeatMap.StagePosition=stageStyle;
+        $(".sectionBlock.seatCharts-container.ui-draggable").each(function(){	
+			var $this=$(this); //current section
+			var sectionObj={
+			    "postion":"",
+				"price":"",
+				"color":"",
+				"sectionNo":"",
+				"seatMap":[]
+			}
+			var sectionPosition=$this.attr("style");
+			var sectionId=$this.attr("id");
+			
+			var tempArry=[];
+			$this.children(".seatCharts-row").each(function(i,n){
+				var obj = $(n)  //current row
+				var tempString="";
+				obj.children("div[role='checkbox']").each(function(j,m){
+				var lastObj = $(m)  //current item
+				if(lastObj.attr("aria-checked")=="true"){
+				      tempString+="_";
+				}else{
+					  tempString+="a";
+				}
+				}); 
+				tempArry.push(tempString);
+			});
+            //Set data
+			sectionObj.postion=sectionPosition;
+			sectionObj.sectionNo=sectionId;
+			sectionObj.seatMap.push(tempArry);
+			//set the price
+			resultSeatMap.Section.push(sectionObj);
+        });
+		return resultSeatMap;
+}
+//Resolve Seat Map
+function resolveSeatMap(){
+var leftObj=saveSeatMap();
+$("#copy-stage").attr("style",leftObj.StagePosition); //set stage position
+$.each(leftObj.Section, function(name, value) {
+      var $this=this;      
+	  var sectionId="copy_"+$this.sectionNo;
+      
+	  var testMap=$this.seatMap;
+	  debugger;
+	  
+	   var deleteButtonId="copy_deleteButton_"+sectionId;
+	   var createHtml="<div id='"+sectionId+"' class='sectionBlock'><a id='"+deleteButtonId+"' class='deleteButton' onclick='deleteCurrentSection("+sectionId+")'></a><span class='sectionLabel'>"+sectionId+"</span></div>";
+	   $("#copy-seat-map").append(createHtml);
+	   var sc=$("#"+sectionId).seatCharts({
+		map: $this.seatMap[0],
+		naming : {
+			top : false,
+			getLabel : function (character, row, column) {
+				return column;
+			}
+		},
+	   });
+	    $("#"+sectionId).attr("style",$this.postion);
+
+})
+
+}
+
+</script>
+</body>
+</html>
